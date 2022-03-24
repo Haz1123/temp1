@@ -1,0 +1,3 @@
+./java/src/Util.java
+./java/src/ArtistRecord.java
+./java/src/dbload.java
