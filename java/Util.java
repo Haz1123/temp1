@@ -1,4 +1,6 @@
+
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Date;
 
 public class Util {
@@ -31,6 +33,18 @@ public class Util {
                 (byte) ((data >> 8) & 0xff),
                 (byte) ((data >> 0) & 0xff),
         };
+    }
+
+    static public int bytesToInt(byte[] bytes) {
+        return new BigInteger(bytes).intValue();
+    }
+
+    static public int[] bytesToIntArray(byte[] bytes) {
+        int[] output = new int[bytes.length / 4];
+        for (int i = 0; i + 4 <= bytes.length; i += 4) {
+            output[i / 4] = bytesToInt(Arrays.copyOfRange(bytes, i, i + 4));
+        }
+        return output;
     }
 
     // Merges length bytes from source into destination, starting at sourceStart and

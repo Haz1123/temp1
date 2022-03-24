@@ -21,6 +21,17 @@
                 "1024",
                 "artist.csv"
             ]
+        },
+        {
+            "type": "java",
+            "name": "Launch birthDate",
+            "request": "launch",
+            "mainClass": "birthDate",
+            "projectName": "Assignment1_73ce6f19",
+            "args": [
+                "19000101",
+                "19001212"
+            ]
         }
     ]
 }

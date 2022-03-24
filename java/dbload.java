@@ -90,7 +90,7 @@ public class dbload {
             Util.arrayMerge(Util.intToBytes(pageHeader[pageHeaderSize - 1 - i]), pageHeaderBytes, 4, 0, i * 4);
         }
         Util.arrayMerge(pageHeaderBytes, page, pageHeaderBytes.length, 0,
-                page.length - pageHeaderBytes.length - 1);
+                page.length - pageHeaderBytes.length);
     }
 
     /**
