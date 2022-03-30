@@ -42,6 +42,8 @@ public class dbload {
         int pageHeaderSize = 2;
         Arrays.fill(pageToWrite, (byte) 0);
 
+        int numRecords = 0;
+
         String readString = "";
         // Remove first 4 lines from buffer
         for (int i = 0; i < 5; i++) {
@@ -51,14 +53,15 @@ public class dbload {
 
             ArtistRecord record = new ArtistRecord(readString);
             byte[] recordBytes = record.getRecordAsBytes();
+            numRecords++;
 
             // Make new page if current record won't fit on current page.
-            if (currentPageSize + (pageHeaderSize + 1 * 4) + recordBytes.length > dbload.pageSize) {
+            if (currentPageSize + ((pageHeaderSize + 1) * 4) + recordBytes.length > dbload.pageSize) {
                 addHeaderToPage(pageToWrite, pageHeader, currentPageSize, pageHeaderSize);
                 // Write page to file
                 dbload.writePage(outputStream, pageToWrite, pageCount);
                 pageCount++;
-                // Reset temp variables
+                // Reset temp and per page variables
                 currentPageSize = 0;
                 pageHeaderSize = 2;
                 Arrays.fill(pageToWrite, (byte) 0);
@@ -79,6 +82,8 @@ public class dbload {
         dbload.writePage(outputStream, pageToWrite, pageCount);
 
         inputFileBuffer.close();
+
+        System.out.println(String.format("Wrote %s records to %s pages", numRecords, pageCount));
     }
 
     private static void addHeaderToPage(byte[] page, int[] pageHeader, int currentPageSize, int pageHeaderSize) {

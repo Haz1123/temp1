@@ -33,7 +33,7 @@ public class ArtistRecord {
         this.deathDate = deathDateLong != Long.MIN_VALUE ? new Date(deathDateLong) : null;
         String stringFields = new String(Arrays.copyOfRange(bytes, 20, bytes.length));
         // Regex matches all '$' but no '\$'
-        String[] fields = stringFields.split("(?<!'\\\\)\\$");
+        String[] fields = stringFields.split("(?<![\\\\])[$]");
         for (int i = 0; i < fields.length; i++) {
             fields[i] = fields[i].replace("\\$", "$");
         }
@@ -137,7 +137,8 @@ public class ArtistRecord {
         StringBuilder output = new StringBuilder();
         for (String s : new String[] { personName, birthPlace, field, genre, instrument, nationality, thumbnail,
                 description }) {
-            output.append(s != null ? s.replace("$", "\\$") : ""); // Append field with dollar signs escaped using \$.
+            output.append(s != null ? s.replace("$", "\\$") : ""); // Replace null string fields with empty strings,
+                                                                   // escape any '$' with '\$'
             output.append("$");
         }
         return output.toString();

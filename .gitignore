@@ -1,2 +1,5 @@
 artist.csv
 artist.csv.gz
+heap.*
+*.sh
+*.zip

@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Vector;
 
 class birthDate {
 
@@ -18,6 +19,7 @@ class birthDate {
     int pageSize = 0;
 
     public static void main(String[] args) {
+        long startTime = System.nanoTime();
         self.readComandLineArgs(args);
         if (!self.verifyCommandLineArgs()) {
             System.exit(0);
@@ -31,24 +33,43 @@ class birthDate {
             }
         }
         try {
+
+            Vector<ArtistRecord> output = new Vector<ArtistRecord>();
             self.pageSize = Integer.parseInt(heapFile.getName().substring(heapFile.getName().lastIndexOf(".") + 1));
             FileInputStream inputStream = new FileInputStream(heapFile);
             byte[] nextPage = new byte[self.pageSize];
+            int i = 1;
+            // Read pages until none are left
             while (inputStream.read(nextPage) != -1) {
-                self.getRecordsFromPage(nextPage);
+                System.out.println(String.format("Reading page %s", i));
+                ArtistRecord[] pageRecords = self.getRecordsFromPage(nextPage);
+                for (ArtistRecord artistRecord : pageRecords) {
+
+                    if (dateInclusiveBetween(artistRecord.birthDate, self.startDate, self.endDate)) {
+                        output.add(artistRecord);
+                    }
+                }
+                i++;
             }
+            long endTime = System.nanoTime();
+            System.out.println(String.format("Query Completed, found %s records in %s milliseconds", output.size(),
+                    (endTime - startTime) / 1000000));
             inputStream.close();
         } catch (NullPointerException e) {
-            System.err.println("No heap file found in active directory.");
+            System.err.println("Null pointer exception, probably no heap file found in active directory.");
+            System.err.println(e.getStackTrace());
             System.exit(0);
         } catch (NumberFormatException e) {
             System.err.println("Issue reading header file's page length.");
+            System.err.println(e.getStackTrace());
             System.exit(0);
         } catch (FileNotFoundException e) {
             System.err.println("Header file not found.");
+            System.err.println(e.getStackTrace());
             System.exit(0);
         } catch (IOException e) {
             System.err.println("IO Exception");
+            System.err.println(e.getStackTrace());
             e.printStackTrace();
             System.exit(0);
         }
@@ -64,13 +85,21 @@ class birthDate {
             pageHeader[pageHeader.length - i - 1] = pageHeaderReverse[i];
         }
         for (int i = 2; i < pageHeader.length - 1; i++) {
-            output[i - 2] = new ArtistRecord(Arrays.copyOfRange(page, pageHeader[i], pageHeader[i + 1]));
+            output[i - 1] = new ArtistRecord(Arrays.copyOfRange(page, pageHeader[i], pageHeader[i + 1]));
         }
         // Get last record using the pointer to the start of free space as the end of
         // the record.
         output[output.length - 1] = new ArtistRecord(
                 Arrays.copyOfRange(page, pageHeader[pageHeader.length - 1], pageHeader[0]));
         return output;
+    }
+
+    static private boolean dateInclusiveBetween(Date date, Date startDate, Date endDate) {
+        if (date == null) {
+            return false;
+        } else {
+            return (date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0);
+        }
     }
 
     private boolean verifyCommandLineArgs() {
