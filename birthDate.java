@@ -18,6 +18,9 @@ class birthDate {
 
     int pageSize = 0;
 
+    /**
+     * @param args
+     */
     public static void main(String[] args) {
         long startTime = System.nanoTime();
         self.readComandLineArgs(args);
@@ -32,49 +35,64 @@ class birthDate {
                 heapFile = file;
             }
         }
-        try {
 
-            Vector<ArtistRecord> output = new Vector<ArtistRecord>();
+        Vector<ArtistRecord> output = self.getFilteredRecordsFromHeapfile(heapFile);
+        long endTime = System.nanoTime();
+        System.out.println(String.format("Query Completed, found %s records in %s milliseconds",
+                output.size(), (endTime - startTime) / 1000000));
+
+        if (output.size() > 0) {
+            System.out.println(ArtistRecord.TO_STRING_HEADERS);
+        }
+        for (ArtistRecord record : output) {
+            System.out.println(record.toString());
+        }
+    }
+
+    private Vector<ArtistRecord> getFilteredRecordsFromHeapfile(File heapFile) {
+        Vector<ArtistRecord> output = new Vector<ArtistRecord>();
+        try {
             self.pageSize = Integer.parseInt(heapFile.getName().substring(heapFile.getName().lastIndexOf(".") + 1));
             FileInputStream inputStream = new FileInputStream(heapFile);
             byte[] nextPage = new byte[self.pageSize];
-            int i = 1;
             // Read pages until none are left
             while (inputStream.read(nextPage) != -1) {
-                System.out.println(String.format("Reading page %s", i));
                 ArtistRecord[] pageRecords = self.getRecordsFromPage(nextPage);
                 for (ArtistRecord artistRecord : pageRecords) {
-
                     if (dateInclusiveBetween(artistRecord.birthDate, self.startDate, self.endDate)) {
                         output.add(artistRecord);
                     }
                 }
-                i++;
             }
-            long endTime = System.nanoTime();
-            System.out.println(String.format("Query Completed, found %s records in %s milliseconds", output.size(),
-                    (endTime - startTime) / 1000000));
             inputStream.close();
         } catch (NullPointerException e) {
             System.err.println("Null pointer exception, probably no heap file found in active directory.");
-            System.err.println(e.getStackTrace());
-            System.exit(0);
+            e.printStackTrace();
+            System.exit(1);
         } catch (NumberFormatException e) {
             System.err.println("Issue reading header file's page length.");
-            System.err.println(e.getStackTrace());
-            System.exit(0);
+            e.printStackTrace();
+            System.exit(1);
         } catch (FileNotFoundException e) {
             System.err.println("Header file not found.");
-            System.err.println(e.getStackTrace());
-            System.exit(0);
+            e.printStackTrace();
+            System.exit(1);
         } catch (IOException e) {
             System.err.println("IO Exception");
-            System.err.println(e.getStackTrace());
             e.printStackTrace();
-            System.exit(0);
+            e.printStackTrace();
+            System.exit(1);
         }
+        return output;
     }
 
+    /**
+     * Reads and returns records from a byte array or 'page'
+     * 
+     * @param page
+     *            byte array to read records from, including header at end
+     * @return ArtistRecord[]
+     */
     private ArtistRecord[] getRecordsFromPage(byte[] page) {
         int numRecords = Util.bytesToInt(Arrays.copyOfRange(page, page.length - 8, page.length - 4));
         ArtistRecord[] output = new ArtistRecord[numRecords];
@@ -85,7 +103,7 @@ class birthDate {
             pageHeader[pageHeader.length - i - 1] = pageHeaderReverse[i];
         }
         for (int i = 2; i < pageHeader.length - 1; i++) {
-            output[i - 1] = new ArtistRecord(Arrays.copyOfRange(page, pageHeader[i], pageHeader[i + 1]));
+            output[i - 2] = new ArtistRecord(Arrays.copyOfRange(page, pageHeader[i], pageHeader[i + 1]));
         }
         // Get last record using the pointer to the start of free space as the end of
         // the record.
@@ -94,6 +112,13 @@ class birthDate {
         return output;
     }
 
+    /**
+     * @param date
+     *            date to check
+     * @param startDate
+     * @param endDate
+     * @return boolean True if date between startDate and endDate (inclusive)
+     */
     static private boolean dateInclusiveBetween(Date date, Date startDate, Date endDate) {
         if (date == null) {
             return false;
@@ -102,6 +127,9 @@ class birthDate {
         }
     }
 
+    /**
+     * @return boolean True if command line arguments are set, false if not
+     */
     private boolean verifyCommandLineArgs() {
         boolean output = true;
         if (startDate == null) {
@@ -115,6 +143,10 @@ class birthDate {
         return output;
     }
 
+    /**
+     * @param args
+     *            command line arguments
+     */
     private void readComandLineArgs(String[] args) {
         try {
             startDate = df.parse(args[0]);

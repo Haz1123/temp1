@@ -1,3 +1,4 @@
+
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -17,6 +18,8 @@ public class ArtistRecord {
     public String nationality;
     public String thumbnail;
     public String description;
+
+    public static final String TO_STRING_HEADERS = "Name, Birth Date, Death Date, Wiki PageId, Birthplace, Field(s), Genre(s), Instrument(s), Nationality, Thumbnail, Description";
 
     /**
      * Constructs an ArtistRecord from a byteArray
@@ -73,6 +76,17 @@ public class ArtistRecord {
         this.nationality = fields[73];
         this.thumbnail = fields[124];
         this.description = fields[137];
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(personName + ", ");
+        sb.append(birthDate != null ? birthDate.toString() + ", " : "NULL, ");
+        sb.append(deathDate != null ? deathDate.toString() + ", " : "NULL, ");
+        sb.append(wikiPageId + ", ");
+        sb.append(String.join(", ",
+                new String[] { birthPlace, field, genre, instrument, nationality, thumbnail, description }));
+        return sb.toString();
     }
 
     /**

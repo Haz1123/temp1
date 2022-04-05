@@ -8,14 +8,14 @@
             "type": "java",
             "name": "Launch Current File",
             "request": "launch",
-            "mainClass": "${file}"
+            "mainClass": "${file}",
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "java",
             "name": "Launch dbload",
             "request": "launch",
             "mainClass": "dbload",
-            "projectName": "Assignment1_73ce6f19",
             "args": [
                 "-p",
                 "4096",
@@ -27,7 +27,6 @@
             "name": "Launch birthDate",
             "request": "launch",
             "mainClass": "birthDate",
-            "projectName": "Assignment1_73ce6f19",
             "args": [
                 "20000101",
                 "20010101"
