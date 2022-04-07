@@ -10,3 +10,4 @@ derbyDB/*
 lib/*
 *.class
 derby.log
+csv/*
