@@ -4,3 +4,9 @@ heap.*
 *.sh
 *.zip
 gitlog.md
+*.json
+vscode/*
+derbyDB/*
+lib/*
+*.class
+derby.log

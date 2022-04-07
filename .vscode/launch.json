@@ -6,10 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch DerbyTests",
+            "request": "launch",
+            "mainClass": "DerbyTests",
+            "projectName": "Assignment1_73ce6f19"
+        },
+        {
+            "type": "java",
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "-XX:CompressedClassSpaceSize=2g"
+            ]
         },
         {
             "type": "java",

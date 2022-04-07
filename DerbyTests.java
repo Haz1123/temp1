@@ -40,12 +40,12 @@ public class DerbyTests {
         readString = inputFileBuffer.readLine();
 
         this.addArtistsTable(conn);
-        final int[] labelFields = new int[] { 9, 11, 13, 15, 17, 19, 25, 29, 32, 34, 36, 38, 41, 44, 46, 48, 50, 52,
+        final int[] labelFields = new int[] { 97, 9, 11, 13, 15, 17, 19, 25, 29, 32, 34, 36, 38, 41, 44, 46, 48, 50, 52,
                 55, 58, 60, 62, 65, 67, 71, 73, 77, 80, 83, 85, 87, 89, 91, 93, 95, 99, 101, 103, 105, 107,
                 109, 111, 117, 119, 121, 123, 126, 130, 134 };
 
         for (int i : labelFields) {
-            if (i == 8 || i == 24) {
+            if (i == 8 || i == 24 || i == 97) {
                 generateArtistFKTable1Field(conn, colNames[i]);
             } else {
                 generateArtistFKTable2Field(conn, colNames[i]);
@@ -64,35 +64,35 @@ public class DerbyTests {
                 readString = inputFileBuffer.readLine();
                 continue;
             }
-
-            for (int j : labelFields) {
-                if (colNames[j].contains("_label")) {
-                    if (!fields[j].equals("NULL")) {
-                        String[] labels = fields[j].replace("{", "").replace("}", "").split("\\|");
-                        String[] uris = fields[j + 1].replace("{", "").replace("}", "").split("\\|");
-                        for (int k = 0; k < labels.length; k++) {
-                            addToArtistFKTable(conn, colNames[j], labels[k], uris[k]);
+            try {
+                for (int j : labelFields) {
+                    if (colNames[j].contains("_label")) {
+                        if (!fields[j].equals("NULL")) {
+                            String[] labels = fields[j].replace("{", "").replace("}", "").split("\\|");
+                            String[] uris = fields[j + 1].replace("{", "").replace("}", "").split("\\|");
+                            for (int k = 0; k < labels.length; k++) {
+                                addToArtistFKTable(conn, colNames[j], labels[k], uris[k]);
+                            }
                         }
+                    } else if (fields[j].equals("NULL")) {
+                        // Skip
+                    } else if (j == 8 || j == 24 || i == 97) {
+                        // Alias and Birthname
+                        String[] labels = fields[j].replace("{", "").replace("}", "").split("\\|");
+                        for (int k = 0; k < labels.length; k++) {
+                            addToArtistFKTable(conn, colNames[j], labels[k]);
+                        }
+                    } else {
+                        System.out.println("UNKNOWN SOMETHING " + colNames[j] + " " + colTypes[j]);
                     }
-                } else if (fields[j].equals("NULL")) {
-                    // Skip
-                } else if (j == 8 || j == 24) {
-                    // Alias and Birthname
-                    String[] labels = fields[j].replace("{", "").replace("}", "").split("\\|");
-                    for (int k = 0; k < labels.length; k++) {
-                        addToArtistFKTable(conn, colNames[j], labels[k]);
-                    }
-                } else {
-                    System.out.println("UNKNOWN SOMETHING " + colNames[j] + " " + colTypes[j]);
                 }
+            } catch (SQLException e) {
+
             }
             readString = inputFileBuffer.readLine();
         }
         conn.close();
         inputFileBuffer.close();
-    }
-
-    private void updateArtistRecord(Connection conn, int artistId, String string, String string2) {
     }
 
     private Date parseDateFromCsv(String s) {
@@ -144,11 +144,11 @@ public class DerbyTests {
                     "bibsysId VARCHAR(25), " +
                     "birthDate DATE, birthName VARCHAR(255), birthYear INTEGER, " +
                     "bnfId VARCHAR(25), bpnId VARCHAR(25), deathDate DATE, deathYear INTEGER, " +
-                    "individualisedGnd VARCHAR(25), isniId VARCHAR(25), lccnId VARCHAR(25), mbaId VARCHAR(255), " +
+                    "individualisedGnd VARCHAR(25), isniId VARCHAR(50), lccnId VARCHAR(50), mbaId VARCHAR(255), " +
                     "networmbaidth FLOAT, nlaId VARCHAR(25), numberOfFilms INTEGER, orcidId VARCHAR(55) ," +
-                    "pseudonym VARCHAR(255), recordDate DATE, restingPlacePosition VARCHAR(255), ridId VARCHAR(25), selibrId VARCHAR(25), "
+                    "recordDate DATE, restingPlacePosition VARCHAR(255), ridId VARCHAR(50), selibrId VARCHAR(50), "
                     +
-                    "title VARCHAR(255), ulanId VARCHAR(25), viafId VARCHAR(25), wikiPageId INTEGER, wikiPageRevisionId INTEGER, description VARCHAR(1000), "
+                    "title VARCHAR(255), ulanId VARCHAR(50), viafId VARCHAR(50), wikiPageId INTEGER, wikiPageRevisionId INTEGER, description VARCHAR(1000), "
                     +
                     "point VARCHAR(255), posLat FLOAT, posLong FLOAT, " +
                     "PRIMARY KEY (artistID))");
@@ -163,7 +163,7 @@ public class DerbyTests {
         record.put("URI", "'" + fields[0].replace("\"", "") + "'");
         record.put("name", "'" + fields[1] + "'");
         record.put("comment", "'" + fields[2] + "'");
-        final int[] stringFields = new int[] { 21, 22, 24, 28, 30, 31, 57, 64, 69, 70, 75, 76, 82, 97, 113,
+        final int[] stringFields = new int[] { 21, 22, 24, 28, 30, 31, 57, 64, 69, 70, 75, 76, 82, 113,
                 114, 116, 125, 128, 129, 137 };
         final int[] yearFields = new int[] { 6, 7, 27, 43 };
         final int[] dateFields = new int[] { 23, 40, 98 };
@@ -225,40 +225,24 @@ public class DerbyTests {
     }
 
     private void addToArtistFKTable(Connection conn, String tableName, String field1) throws SQLException {
-        Runnable runnable = () -> {
-            Connection _conn = null;
-            try {
-                _conn = DriverManager.getConnection(protocol + "derbyDB;create=true", null);
-                Statement st = _conn.createStatement();
-                st.execute(String.format("INSERT INTO %s (field1) VALUES ('%s')", tableName, field1));
-            } catch (SQLException e) {
-            }
-            try {
-                _conn.close();
-            } catch (Exception e) {
-            }
-        };
-        runnable.run();
-
+        try {
+            conn = DriverManager.getConnection(protocol + "derbyDB;create=true", null);
+            Statement st = conn.createStatement();
+            st.execute(String.format("INSERT INTO %s (field1) VALUES ('%s')", tableName, field1));
+        } catch (SQLException e) {
+        }
     }
 
     private void addToArtistFKTable(Connection conn, String tableName, String field1, String field2)
             throws SQLException {
-        Runnable runnable = () -> {
-            Connection _conn = null;
-            try {
-                _conn = DriverManager.getConnection(protocol + "derbyDB;create=true", null);
-                Statement st = _conn.createStatement();
-                st.execute(String.format("INSERT INTO %s (field1, field2) VALUES ('%s', '%s')", tableName, field1,
-                        field2));
-            } catch (SQLException e) {
-            }
-            try {
-                _conn.close();
-            } catch (Exception e) {
-            }
-        };
-        runnable.run();
+        try {
+            conn = DriverManager.getConnection(protocol + "derbyDB;create=true", null);
+            Statement st = conn.createStatement();
+            st.execute(String.format("INSERT INTO %s (field1, field2) VALUES ('%s', '%s')", tableName, field1,
+                    field2));
+        } catch (SQLException e) {
+        }
+
     }
 
     private void generateArtistFKTable1Field(Connection conn, String tableName)
