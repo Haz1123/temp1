@@ -11,3 +11,4 @@ lib/*
 *.class
 derby.log
 csv/*
+artist_derby.csv
